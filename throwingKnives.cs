@@ -6,18 +6,22 @@ using TMPro;
 
 public class ThrowingKnives : MonoBehaviour
 {
+
+    // objects & prefab
     [Header("References")]
-    public Transform cam;
+    public Transform direction;
     public Transform attackPoint;
     public GameObject objectToThrow;
 
+    // number of throws and cd
     [Header("Settings")]
     public int totalThrows;
     public float throwCooldown;
 
+    // force and ballistic
     [Header("Throwing")]
     public KeyCode throwKey = KeyCode.Mouse0;
-    public UnityEvent Using;
+    public UnityEvent animEvent;
     public float throwForce;
     public float throwUpwardForce;
 
@@ -25,10 +29,10 @@ public class ThrowingKnives : MonoBehaviour
 
     private void Start()
     {
-        readyToThrow = true;
+        readyToThrow = true; // reset cd
     }
 
-    private void Update()
+    private void Update() // check if keypressed and cd is true and char have knives
     {
         if(Input.GetKeyDown(throwKey) && readyToThrow && totalThrows > 0)
         {
@@ -36,40 +40,43 @@ public class ThrowingKnives : MonoBehaviour
         }
     }
 
+    // a lil input before knife ll go, it s need to look more good with anim
     IEnumerator Wait()
     {
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, cam.rotation, 1.0f * Time.deltaTime);
-        Using.Invoke();
-        yield return new WaitForSeconds(1/2);
+        //transform.rotation = Quaternion.RotateTowards(transform.rotation, direction.rotation, 1.0f * Time.deltaTime); //unused old
+        transform.rotation = Quaternion.Euler(0, direction.transform.localRotation.eulerAngles.y, 0); // set char to camera's dir
+        animEvent.Invoke(); // we need to use anim before throw, its from another script system
+        yield return new WaitForSeconds(1/2); // input wait is 0.5 secs
         Throw();
     }
 
     private void Throw()
-    {
+    {   
+        readyToThrow = false; // cd is now no yet
 
-        readyToThrow = false;
-
-        // instantiate object to throw
-        GameObject projectile = Instantiate(objectToThrow, attackPoint.position, cam.rotation);
+        // creatin object from chosen prefab
+        GameObject projectile = Instantiate(objectToThrow, attackPoint.position, direction.rotation);
 
         // get rigidbody component
         Rigidbody projectileRb = projectile.GetComponent<Rigidbody>();
 
-        // calculate direction
-        Vector3 forceDirection = cam.transform.forward;
+        // calculate direction of object
+        Vector3 forceDirection = direction.transform.forward;
 
+        // creatin ray to navigate
         RaycastHit hit;
 
-        if(Physics.Raycast(cam.position, cam.forward, out hit, 500f))
+        if(Physics.Raycast(direction.position, direction.forward, out hit, 500f))
         {
             forceDirection = (hit.point - attackPoint.position).normalized;
         }
 
-        // add force
+        // add force to object
         Vector3 forceToAdd = forceDirection * throwForce + transform.up * throwUpwardForce;
 
         projectileRb.AddForce(forceToAdd, ForceMode.Impulse);
 
+        // now char have less knives
         totalThrows--;
 
         // implement throwCooldown
