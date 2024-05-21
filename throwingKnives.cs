@@ -9,82 +9,83 @@ public class ThrowingKnives : MonoBehaviour
 
     // objects & prefab
     [Header("References")]
-    public Transform direction;
-    public Transform attackPoint;
-    public GameObject objectToThrow;
+    [SerializeField]
+    private Transform Direction;
+    [SerializeField]
+    private Transform AttackPoint;
+    [SerializeField]
+    private GameObject ObjectToThrow;
 
     // number of throws and cd
     [Header("Settings")]
-    public int totalThrows;
-    public float throwCooldown;
+    [SerializeField]
+    private int TotalThrows;
+    [SerializeField]
+    private float ThrowCooldown;
 
     // force and ballistic
     [Header("Throwing")]
-    public KeyCode throwKey = KeyCode.Mouse0;
-    public UnityEvent animEvent;
-    public float throwForce;
-    public float throwUpwardForce;
+    [SerializeField]
+    private KeyCode ThrowKey = KeyCode.Mouse0;
+    [SerializeField]
+    private UnityEvent AnimEvent;
+    [SerializeField]
+    private float ThrowForce;
+    [SerializeField]
+    private float ThrowUpwardForce;
 
-    bool readyToThrow;
+    bool ReadyToThrow;
+    int BeforeDelay = 0;
 
     private void Start()
     {
-        readyToThrow = true; // reset cd
+        ReadyToThrow = true; // reset cd
     }
 
     private void Update() // check if keypressed and cd is true and char have knives
     {
-        if(Input.GetKeyDown(throwKey) && readyToThrow && totalThrows > 0)
+        if (Input.GetKeyDown(ThrowKey) && ReadyToThrow && TotalThrows > 0)
         {
             StartCoroutine(Wait());
         }
     }
 
     // a lil input before knife ll go, it s need to look more good with anim
-    IEnumerator Wait()
+    private IEnumerator Wait()
     {
-        //transform.rotation = Quaternion.RotateTowards(transform.rotation, direction.rotation, 1.0f * Time.deltaTime); //unused old
-        transform.rotation = Quaternion.Euler(0, direction.transform.localRotation.eulerAngles.y, 0); // set char to camera's dir
-        animEvent.Invoke(); // we need to use anim before throw, its from another script system
-        yield return new WaitForSeconds(1/2); // input wait is 0.5 secs
+        transform.rotation = Quaternion.Euler(0, Direction.transform.localRotation.eulerAngles.y, 0); // set char to camera's dir
+        AnimEvent.Invoke(); // we need to use anim before throw, its from another script system
+        yield return new WaitForSeconds(BeforeDelay); // input wait is BeforeDelay secs
         Throw();
     }
 
     private void Throw()
-    {   
-        readyToThrow = false; // cd is now no yet
+    {
+        ReadyToThrow = false; // cd is now no yet
 
         // creatin object from chosen prefab
-        GameObject projectile = Instantiate(objectToThrow, attackPoint.position, direction.rotation);
+        GameObject projectile = Instantiate(ObjectToThrow, AttackPoint.position, Direction.rotation);
 
         // get rigidbody component
         Rigidbody projectileRb = projectile.GetComponent<Rigidbody>();
 
         // calculate direction of object
-        Vector3 forceDirection = direction.transform.forward;
-
-        // creatin ray to navigate
-        RaycastHit hit;
-
-        if(Physics.Raycast(direction.position, direction.forward, out hit, 500f))
-        {
-            forceDirection = (hit.point - attackPoint.position).normalized;
-        }
+        Vector3 forceDirection = Direction.transform.forward;
 
         // add force to object
-        Vector3 forceToAdd = forceDirection * throwForce + transform.up * throwUpwardForce;
+        Vector3 forceToAdd = forceDirection * ThrowForce + transform.up * ThrowUpwardForce;
 
         projectileRb.AddForce(forceToAdd, ForceMode.Impulse);
 
         // now char have less knives
-        totalThrows--;
+        TotalThrows--;
 
-        // implement throwCooldown
-        Invoke(nameof(ResetThrow), throwCooldown);
+        // implement ThrowCooldown
+        Invoke(nameof(ResetThrow), ThrowCooldown);
     }
 
     private void ResetThrow()
     {
-        readyToThrow = true;
+        ReadyToThrow = true;
     }
 }
