@@ -22,6 +22,8 @@ public class ThrowingKnives : MonoBehaviour
     private int TotalThrows;
     [SerializeField]
     private float ThrowCooldown;
+    [SerializeField]
+    public bool ThrowEnabled = true;
 
     // force and ballistic
     [Header("Throwing")]
@@ -42,9 +44,25 @@ public class ThrowingKnives : MonoBehaviour
         ReadyToThrow = true; // reset cd
     }
 
+    public void AddKnives(int value) // can be used when player picks up
+    {
+        TotalThrows += value;
+    }
+
+    public void DelKnives() // can be used after char's death
+    {
+        TotalThrows = 0;
+    }
+
+    public void Switch(bool State) // disable or enable throwing
+    {
+        ThrowEnabled = State;
+    }
+
+
     private void Update() // check if keypressed and cd is true and char have knives
     {
-        if (Input.GetKeyDown(ThrowKey) && ReadyToThrow && TotalThrows > 0)
+        if (Input.GetKeyDown(ThrowKey) && ReadyToThrow && TotalThrows > 0 && ThrowEnabled)
         {
             StartCoroutine(Wait());
         }
